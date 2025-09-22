@@ -1,0 +1,32 @@
+@startuml
+cloud "Clúster en la Nube (Kubernetes)" {
+  node "Balanceador de Carga / CDN" as LB
+  node "Controlador Ingress (Envoy)" as Ingress
+  node "Namespace: producción" {
+    node "pod: api-gateway" as Gateway
+    node "pod: servicio-pagos (HPA)" as Pagos
+    node "pod: servicio-inscripciones (HPA)" as Inscrip
+    node "pod: servicio-notificaciones" as Notif
+    database "postgres-pagos (gestionado)" as PgPagos
+    node "kafka (gestionado)" as Kafka
+    storage "S3 (almacenamiento de objetos)" as S3
+  }
+}
+
+node "Externo: Proveedor de Pagos" as Proveedor
+node "Externo: Proveedor de Identidad (OIDC)" as IdP
+node "Externo: ERP Universitario" as ERP
+
+LB --> Ingress
+Ingress --> Gateway
+Gateway --> Pagos
+Gateway --> Inscrip
+Pagos --> PgPagos
+Pagos --> Proveedor
+Pagos --> Kafka
+Inscrip --> Kafka
+Notif --> Kafka
+Notif --> S3
+Pagos --> ERP
+Ingress --> IdP : Redirección OIDC
+@enduml

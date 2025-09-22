@@ -1,0 +1,46 @@
+@startuml
+package "servicio-pagos" {
+  
+  class Pago {
+    +id: UUID
+    +idArrendatario: String
+    +monto: Decimal
+    +moneda: String
+    +estado: EstadoPago
+    +fechaCreacion: DateTime
+  }
+
+  class IntentoPago {
+    +id: UUID
+    +idPago: UUID
+    +idSesionProveedor: String
+    +estado: EstadoIntento
+    +respuestaProveedor: String
+  }
+
+  class ControladorPagos {
+    +crearPago(solicitud): Pago
+    +obtenerPago(id): Pago
+  }
+
+  class OrquestadorPagos {
+    +iniciar(pago): IntentoPago
+    +procesarWebhook(datos): void
+  }
+
+  class RepositorioPagos {
+    +guardar(pago): Pago
+    +buscarPorId(id): Pago
+  }
+
+  class PublicadorEventos {
+    +publicar(nombreEvento, datos): void
+  }
+
+  ControladorPagos --> OrquestadorPagos
+  OrquestadorPagos --> RepositorioPagos
+  OrquestadorPagos --> PublicadorEventos
+  RepositorioPagos ..> Pago
+  OrquestadorPagos ..> IntentoPago
+}
+@enduml

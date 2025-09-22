@@ -1,0 +1,24 @@
+@startuml
+participant "Alumno (WebApp)" as Alumno
+participant "API Gateway" as Gateway
+participant "servicio-pagos" as Pagos
+participant "Proveedor de Pagos" as Proveedor
+participant "Bus de Eventos" as Bus
+participant "ERP Universitario" as ERP
+participant "servicio-notificaciones" as Notif
+
+Alumno -> Gateway: POST /pagos {monto, arrendatario}
+Gateway -> Pagos: POST /pagos
+Pagos -> RepositorioPagos: guardar(Pago: PENDIENTE)
+Pagos -> Proveedor: crearSesionPago(P)
+Proveedor --> Pagos: idSesion, urlRedireccion
+Pagos -> Bus: publicar(PagoIniciado)
+Pagos --> Gateway: 302 redirigir -> Proveedor (o devolver sesión)
+
+== Más tarde: webhook ==
+Proveedor -> Pagos: POST /webhook {estado, idSesion}
+Pagos -> RepositorioPagos: actualizarEstado(PAGADO)
+Pagos -> Bus: publicar(PagoConfirmado)
+Pagos -> ERP: enviar(Registro de Conciliación) [asíncrono]
+Bus -> Notif: PagoConfirmado -> enviarComprobante
+@enduml
